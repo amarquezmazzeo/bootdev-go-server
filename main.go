@@ -6,17 +6,13 @@ import (
 	"net/http"
 )
 
-func healthHandler(respWriter http.ResponseWriter, req *http.Request) {
-	respWriter.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	respWriter.WriteHeader(200)
-	respWriter.Write([]byte("OK\n"))
-
-}
-
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
-	mux.HandleFunc("/healthz", healthHandler)
+	apiCfg := &apiConfig{}
+	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
+	mux.HandleFunc("/healthz", handlerHealth)
+	mux.HandleFunc("/metrics", apiCfg.handlerMetrics)
+	mux.HandleFunc("/reset", apiCfg.handlerReset)
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
