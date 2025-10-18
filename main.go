@@ -1,14 +1,27 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/amarquezmazzeo/bootdev-go-server/internal/database"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	// db setup
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("could not open db: %s", err)
+	}
+	dbQueries := database.New(db)
+
 	mux := http.NewServeMux()
-	apiCfg := &apiConfig{}
+	apiCfg := &apiConfig{dbQueries: dbQueries}
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
 	mux.HandleFunc("GET /api/healthz", handlerHealth)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
