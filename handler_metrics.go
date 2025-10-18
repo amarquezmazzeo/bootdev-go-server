@@ -3,15 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"sync/atomic"
-
-	"github.com/amarquezmazzeo/bootdev-go-server/internal/database"
 )
-
-type apiConfig struct {
-	fileserverHits atomic.Int32
-	dbQueries      *database.Queries
-}
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -32,8 +24,8 @@ func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 </html>`, currentCount)
 }
 
-func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.Store(0)
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Metrics 'Hits' reset to 0"))
-}
+// func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
+// 	cfg.fileserverHits.Store(0)
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte("Metrics 'Hits' reset to 0"))
+// }
