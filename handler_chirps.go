@@ -39,6 +39,45 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
+
+	// type requestParameters struct {
+	// 	UserID uuid.UUID `json:"user_id"`
+	// }
+
+	// decoder := json.NewDecoder(r.Body)
+	// params := requestParameters{}
+	// err := decoder.Decode(&params)
+	// if err != nil {
+	// 	respondWithError(w, http.StatusInternalServerError, "Error decoding request", err)
+	// 	return
+	// }
+	chirpIdString := r.PathValue("chirpId")
+	chirpIdUUID, err := uuid.Parse(chirpIdString)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error decoding request", err)
+		return
+	}
+
+	dbChirp, err := cfg.dbQueries.GetChirp(r.Context(), chirpIdUUID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Chirp not found", err)
+		return
+	}
+
+	respChirp := responseChirp{
+		ID:        dbChirp.ID,
+		CreatedAt: dbChirp.CreatedAt,
+		UpdatedAt: dbChirp.UpdatedAt,
+		Body:      dbChirp.Body,
+		UserID:    dbChirp.UserID,
+	}
+
+	respondWithJson(w, http.StatusOK, respChirp)
+
+}
+
 func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
 	const maxChirpLength = 140
 
