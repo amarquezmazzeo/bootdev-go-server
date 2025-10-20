@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amarquezmazzeo/bootdev-go-server/internal/auth"
+	"github.com/amarquezmazzeo/bootdev-go-server/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -15,19 +17,28 @@ type userJson struct {
 	Email     string    `json:"email"`
 }
 
-type newUser struct {
-	Email string `json:"email"`
+type userParams struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	var params = newUser{}
+	var params = userParams{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error decoding request", err)
 		return
 	}
-	user, err := cfg.dbQueries.CreateUser(r.Context(), params.Email)
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error hashing password", err)
+		return
+	}
+	user, err := cfg.dbQueries.CreateUser(r.Context(), database.CreateUserParams{
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error registering user", err)
 		return
